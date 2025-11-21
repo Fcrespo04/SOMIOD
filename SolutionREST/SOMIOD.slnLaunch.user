@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "ProductsDatabaseAPI\\MiddleWare.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "ClientProductsApp-base\\FormsTeste.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

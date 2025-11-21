@@ -1,0 +1,111 @@
+middleware webservice do tipo REST ( não pode ser SOAP)
+
+objetivo: potenciar e permitir que qualquer aplicação se possa registar e interagir com outras apps
+
+rsgistar se no middleware para saberem como devem proceder e respeitar as regras do middleware
+
+para iniciar o desenvolvimento do middleware deve se focar apenas nas suas funções e não nas apps que o vao usar
+
+Usar sempre postman ou bruno para testar. Fazer sequencia de pedidos para simulação
+
+RESPEITAR TUDO O QUE ESTA NO ENUNCIADO: USAR SEMPRE O MESMO NOME E PROPRIEDADES QUE ESTA NO ENUNCIADO
+
+pode ser necessario implementar algumas coisas que nao estao no enunciado, mas a partida e pouca coisa
+
+Primeiro Objetivo: brainstorming de lista de endpoints com nome e action
+
+implementar rota rest com base http://<domain:port>/api/somiod/
+
+containers são estrutura interna para representar dados no middleware
+
+content instance - conteudos/dados associados a um conteiner da aplicação
+
+subscription - aplicação para receber notificação que ação create ou delete ocorreu no content instance
+
+caso aconteca post ou delete num content type tem de pesquisar na lista de subscritores associados ao container quem está interessado em receber a notificação
+verificar se pretende enviar por http ou mqqt e enviar de acordo com o padrão. Enviar para o endereço especificado para os interessados
+
+capacidade de poder fazer POST de containers, applications, content-instance e subscriptions
+
+não há endpoint que passe ids nas rotas. Não criar endpoints que não estão no enunciado
+GET-várias versões de GET para os tipos
+
+todos têm propriedade res-type, pudendo ser application, container, content instance ou subscription
+
+pode ser possivel adicionar propriedades adicionais mas apenas para intergir com a base de dados (gerir storage e hierarquia). nao colocar na api
+
+
+content-instance tem content-type (se é xml ou json) e content (enviar em formato correspondente ao content-type, colocar validações na api)
+
+subscription tem evt (2 tipos: quando é apagado (DELETE) ou criado content-instance (CREATE) ou AMBOS. É uma constante que só aceita 2 valores, não é string) e endpoint (para onde enviar a notificação)
+
+URL api/somiod/applicação/container/(...)
+
+container é forma de agrupar outro tipo de recurso (neste caso content-instances e subscription)
+cada app pode ter mais que 1 container
+
+subscrição nao tem POST nem GET
+
+cada resource tem de ser atrubuido resource-name unique. Caso já haja igual deve acrescentar um numero no fim (ex ja existe Nengue -> passa a Nengue1 -> Nengue2)
+apresentar na resposta o novo nome atribuido. NAO PODE HAVER CONFLITOS DE NOMES
+
+deve ser possivel fazer POST, PUT, GET (é diferente de como fazemos), DELETE, DISCOVER (GET com filtro ex: recursos do tipo application) para os resources
+
+PUT em content-instance e subscription não existe
+
+POST E DISCOVER(GET especial) deve ser feito no url pai (container ou app???)
+DELETE E GET devem apontar para o url do recurso
+
+
+caso necessário, o canal MQTT para subscrições (topico) tem de ser o mesmo nome do caminho no URL (em teste.mosquito.org, em vez de news,lixo,... aparece a path do url para o recurso)
+
+
+Implementar recursos mais obvios e so depois fazer as subscriptios e depois adaptar o codigo das content-instance para enviar eventos de subscriptions
+
+
+quando é criado ou atualizado um recuso no middleware deve ser retornado o status code HTTP com TODAS as propriedades do recurso alterado
+
+TODOS OS RECURSOS TÊM DE SER GUARDADOS NUMA BASE DE DADOS ( na bd os recursos podem ter chaves adicionais, como chaves priamrias/secundarais, apenas locais na bd, não na API)
+
+nao usar ids na api, usar apenas resource-name
+
+
+DISCOVER -> GET com somiod-discovery com 4 opções para o valor somiod-discovery no header do pedido HTTP
+retornar lista de caminhos para o determinado recurso
+
+verificar endpoints da ficha, nao estão todos presentes por isso ter atenção em implementar tudo
+
+GET ALL nao é suportado ( existem GETS com somiod-discovery que podem ter a mes a função)
+
+cada resource na bd tem um time stamp automático
+
+
+evt: 1 para criação e 2 para eliminação, se alguem quiser os 2 terá que fazer 2 pedidos (1 com cada valor)
+
+unique name tem que ser único dentro daquele tipo de recurso (ex: pode haver 2 nomes iguais se forem recursos diferentes tipo-> app:nengue e container:nengue é permitido, só não é se forem do mesmo recurso)
+
+res-type deve ir no body do HTTP e eindicar o tipo de recurso, atualizar rota POST consoante tipo ( ex se quiser criar container tem que verificar se a app exsite para criar container la dentro)
+
+
+mais fodido e endpoint de content instance
+
+
+USAR SWAGGER PARA DOCUMENTAÇÃO, so gerar no fim e fazer backup antes de gerar swagger (importante!!!)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
