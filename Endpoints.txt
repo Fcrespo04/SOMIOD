@@ -1,0 +1,180 @@
+
+_____________________________________________________________________
+	
+		Recurso: Application (Aplicação)
+		As aplicações são o nível de topo da hierarquia.
+_____________________________________________________________________
+
+Criar (Create):
+
+Método: POST
+Endpoint: /api/somiod/
+
+
+Nota: O corpo do pedido deve indicar res-type: application.
+
+Obter (Read):
+
+Método: GET
+
+Endpoint: /api/somiod/{applicationName}
+
+Atualizar (Update):
+
+Método: PUT
+
+Endpoint: /api/somiod/{applicationName}
+
+Apagar (Delete):
+
+Método: DELETE
+
+Endpoint: /api/somiod/{applicationName}
+
+Descobrir (Discover):
+
+Método: GET
+
+Endpoint: /api/somiod/
+
+Header Obrigatório: somiod-discovery: application.
+
+_____________________________________________________________________
+
+			Recurso: Container
+Os containers vivem dentro de uma aplicação e servem para agrupar dados e subscrições.
+_____________________________________________________________________
+
+Criar (Create):
+
+Método: POST
+
+Endpoint: /api/somiod/{applicationName}
+
+Nota: O pedido é feito ao pai (a aplicação). O corpo deve indicar res-type: container.
+
+Obter (Read):
+
+Método: GET
+
+Endpoint: /api/somiod/{applicationName}/{containerName}
+
+Atualizar (Update):
+
+Método: PUT
+
+Endpoint: /api/somiod/{applicationName}/{containerName}
+
+Apagar (Delete):
+
+Método: DELETE
+
+Endpoint: /api/somiod/{applicationName}/{containerName}
+
+Descobrir (Discover):
+
+Método: GET
+
+Endpoint: /api/somiod/{applicationName}
+
+
+Header Obrigatório: somiod-discovery: container.
+
+_____________________________________________________________________
+	
+		Recurso: Content-Instance (Dados)
+		Representam os registos de dados dentro de um container.
+_____________________________________________________________________
+
+Criar (Create):
+
+Método: POST
+
+Endpoint: /api/somiod/{applicationName}/{containerName}
+
+Nota: O pedido é feito ao pai (o container). O corpo deve indicar res-type: content-instance. Importante: Esta ação deve disparar notificações para os subscritores.
+
+
+Obter (Read):
+
+Método: GET
+
+
+Endpoint: /api/somiod/{applicationName}/{containerName}/{contentInstanceName}.
+
+Atualizar (Update):
+
+
+Não Suportado.
+
+Apagar (Delete):
+
+Método: DELETE
+
+Endpoint: /api/somiod/{applicationName}/{containerName}/{contentInstanceName}
+
+
+Nota: Esta ação deve disparar notificações para os subscritores.
+
+Descobrir (Discover):
+
+Método: GET
+
+Endpoint: /api/somiod/{applicationName}/{containerName}
+
+
+Header Obrigatório: somiod-discovery: content-instance.
+
+_____________________________________________________________________
+
+	Recurso: Subscription (Subscrição)
+	Permitem receber notificações de eventos (criação/eliminação). 
+	Atenção: Este recurso usa um nó virtual /subs/ na URL para operações de GET e DELETE.
+_____________________________________________________________________
+
+
+Criar (Create):
+
+Método: POST
+
+Endpoint: /api/somiod/{applicationName}/{containerName}
+
+Nota: Tal como o Content-Instance, cria-se no pai (container). O corpo deve indicar res-type: subscription.
+
+Obter (Read):
+
+Método: GET
+
+
+Endpoint: /api/somiod/{applicationName}/{containerName}/subs/{subscriptionName}.
+
+Atualizar (Update):
+
+
+Não Suportado.
+
+Apagar (Delete):
+
+Método: DELETE
+
+
+Endpoint: /api/somiod/{applicationName}/{containerName}/subs/{subscriptionName}.
+
+Descobrir (Discover):
+
+Método: GET
+
+Endpoint: /api/somiod/{applicationName}/{containerName}
+
+
+Header Obrigatório: somiod-discovery: subscription (embora não explícito na tabela de exemplos, segue a lógica dos outros recursos para listar subscrições de um container).
+
+_____________________________________________________________________
+
+****************  Resumo de Regras Importantes: ****************
+
+Sem IDs: Usar sempre os nomes dos recursos (resource-name) nas rotas.
+
+Header de Descoberta: Não existe um "Get All" tradicional. Para listar recursos filhos, usa-se o GET no pai com o header somiod-discovery: <tipo_filho>.
+
+Unicidade: Se tentarem criar um recurso com um nome já existente, o sistema deve gerar um nome único (ex: adicionar um número) e retornar o novo nome na resposta.
