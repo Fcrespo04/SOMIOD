@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using ProductsDatabaseAPI.Models;
+using MiddleWare.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web.Http;
 
-namespace ProductsDatabaseAPI.Controllers
+namespace MiddleWare.Controllers
 {
     
     public class SomiodController : ApiController

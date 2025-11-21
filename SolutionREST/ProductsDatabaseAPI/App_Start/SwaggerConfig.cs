@@ -1,11 +1,11 @@
 using System.Web.Http;
 using WebActivatorEx;
-using ProductsDatabaseAPI;
+using MiddleWare;
 using Swashbuckle.Application;
 
 [assembly: PreApplicationStartMethod(typeof(SwaggerConfig), "Register")]
 
-namespace ProductsDatabaseAPI
+namespace MiddleWare
 {
     public class SwaggerConfig
     {
@@ -32,7 +32,7 @@ namespace ProductsDatabaseAPI
                         // hold additional metadata for an API. Version and title are required but you can also provide
                         // additional fields by chaining methods off SingleApiVersion.
                         //
-                        c.SingleApiVersion("v1", "ProductsDatabaseAPI");
+                        c.SingleApiVersion("v1", "MiddleWare");
 
                         // If you want the output Swagger docs to be indented properly, enable the "PrettyPrint" option.
                         //
@@ -254,7 +254,7 @@ namespace ProductsDatabaseAPI
 
         public static string GetXmlCommentsPath() 
         {
-            return string.Format(@"{0}\bin\ProductsDatabaseAPI.xml", System.AppDomain.CurrentDomain.BaseDirectory);
+            return string.Format(@"{0}\bin\MiddleWare.xml", System.AppDomain.CurrentDomain.BaseDirectory);
         }
     }
 }
