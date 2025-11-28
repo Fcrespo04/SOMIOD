@@ -2,6 +2,3 @@
 bin/
 obj/
 *.user
-SolutionREST/.vs
-*.mdf
-*.ldf
