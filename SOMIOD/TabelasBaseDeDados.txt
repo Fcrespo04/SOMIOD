@@ -1,8 +1,8 @@
 -- 1. APPLICATION
 CREATE TABLE [dbo].[application] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
-    [resource-name]     NVARCHAR(50)    NOT NULL UNIQUE, -- Mandatory property [cite: 43]
-    [creation-datetime] DATETIME        NOT NULL DEFAULT GETDATE(), -- Mandatory name 
+    [resource-name]     NVARCHAR(50)    NOT NULL UNIQUE,
+    [creation-datetime] DATETIME        NOT NULL DEFAULT GETDATE(),
     PRIMARY KEY CLUSTERED ([id] ASC)
 );
 
@@ -14,7 +14,6 @@ CREATE TABLE [dbo].[container] (
     [parent]            INT             NOT NULL,
     PRIMARY KEY CLUSTERED ([id] ASC),
     FOREIGN KEY ([parent]) REFERENCES [dbo].[application] ([id]) ON DELETE CASCADE,
-    -- Ensures a parent cannot have two containers with the same name [cite: 50]
     CONSTRAINT uq_container UNIQUE([parent], [resource-name])
 );
 
