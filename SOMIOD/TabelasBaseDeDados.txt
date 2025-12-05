@@ -1,40 +1,46 @@
+-- 1. APPLICATION
 CREATE TABLE [dbo].[application] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
-    [resource-name]     NVARCHAR(50)    NOT NULL UNIQUE,
-    [content-instance]  DATETIME        NOT NULL DEFAULT GETDATE(),
+    [resource-name]     NVARCHAR(50)    NOT NULL UNIQUE, -- Mandatory property [cite: 43]
+    [creation-datetime] DATETIME        NOT NULL DEFAULT GETDATE(), -- Mandatory name 
     PRIMARY KEY CLUSTERED ([id] ASC)
 );
 
+-- 2. CONTAINER
 CREATE TABLE [dbo].[container] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
     [resource-name]     NVARCHAR(50)    NOT NULL,
-    [content-instance]  DATETIME        NOT NULL DEFAULT GETDATE(),
+    [creation-datetime] DATETIME        NOT NULL DEFAULT GETDATE(),
     [parent]            INT             NOT NULL,
     PRIMARY KEY CLUSTERED ([id] ASC),
     FOREIGN KEY ([parent]) REFERENCES [dbo].[application] ([id]) ON DELETE CASCADE,
+    -- Ensures a parent cannot have two containers with the same name [cite: 50]
     CONSTRAINT uq_container UNIQUE([parent], [resource-name])
 );
 
+-- 3. CONTENT-INSTANCE
 CREATE TABLE [dbo].[content-instance] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
     [resource-name]     NVARCHAR(50)    NOT NULL,
     [content-type]      NVARCHAR(50)    NOT NULL,
     [content]           NVARCHAR(MAX)   NOT NULL,
-    [creationDate]      DATETIME        NOT NULL DEFAULT GETDATE(),
+    [creation-datetime] DATETIME        NOT NULL DEFAULT GETDATE(),
     [parent]            INT             NOT NULL,
     PRIMARY KEY CLUSTERED ([id] ASC),
     FOREIGN KEY ([parent]) REFERENCES [dbo].[container] ([id]) ON DELETE CASCADE,
     CONSTRAINT uq_contentinstance UNIQUE([parent], [resource-name])
 );
 
+-- 4. SUBSCRIPTION
 CREATE TABLE [dbo].[subscription] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
     [resource-name]     NVARCHAR(50)    NOT NULL,
-    [creationDate]      DATETIME        NOT NULL DEFAULT GETDATE(),
+    [creation-datetime] DATETIME        NOT NULL DEFAULT GETDATE(),
     [parent]            INT             NOT NULL,
     [evt]               INT             NOT NULL,
     [endpoint]          NVARCHAR(200)   NOT NULL,
     PRIMARY KEY CLUSTERED ([id] ASC),
     FOREIGN KEY ([parent]) REFERENCES [dbo].[container] ([id]) ON DELETE CASCADE,
-    CONSTRAINT uq_subscription UNIQUE([parent], [resource-name])
+    CONSTRAINT uq_subscription UNIQUE([parent], [resource-name]),
+    CONSTRAINT chk_evt CHECK ([evt] IN (1, 2)) 
 );
