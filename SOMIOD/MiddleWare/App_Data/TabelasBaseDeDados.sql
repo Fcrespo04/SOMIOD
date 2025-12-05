@@ -1,14 +1,15 @@
-﻿CREATE TABLE [dbo].[application] (
+﻿
+CREATE TABLE [dbo].[application] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
     [resource-name]     NVARCHAR(50)    NOT NULL UNIQUE,
-    [content-instance]  DATETIME        NOT NULL DEFAULT GETDATE(),
+    [creation-datetime]  DATETIME        NOT NULL DEFAULT GETDATE(),
     PRIMARY KEY CLUSTERED ([id] ASC)
 );
 
 CREATE TABLE [dbo].[container] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
     [resource-name]     NVARCHAR(50)    NOT NULL,
-    [content-instance]  DATETIME        NOT NULL DEFAULT GETDATE(),
+    [creation-datetime]  DATETIME        NOT NULL DEFAULT GETDATE(),
     [parent]            INT             NOT NULL,
     PRIMARY KEY CLUSTERED ([id] ASC),
     FOREIGN KEY ([parent]) REFERENCES [dbo].[application] ([id]) ON DELETE CASCADE,
@@ -20,7 +21,7 @@ CREATE TABLE [dbo].[content-instance] (
     [resource-name]     NVARCHAR(50)    NOT NULL,
     [content-type]      NVARCHAR(50)    NOT NULL,
     [content]           NVARCHAR(MAX)   NOT NULL,
-    [creationDate]      DATETIME        NOT NULL DEFAULT GETDATE(),
+    [creation-datetime]      DATETIME        NOT NULL DEFAULT GETDATE(),
     [parent]            INT             NOT NULL,
     PRIMARY KEY CLUSTERED ([id] ASC),
     FOREIGN KEY ([parent]) REFERENCES [dbo].[container] ([id]) ON DELETE CASCADE,
@@ -30,7 +31,7 @@ CREATE TABLE [dbo].[content-instance] (
 CREATE TABLE [dbo].[subscription] (
     [id]                INT             IDENTITY(1,1) NOT NULL,
     [resource-name]     NVARCHAR(50)    NOT NULL,
-    [creationDate]      DATETIME        NOT NULL DEFAULT GETDATE(),
+    [creation-datetime]      DATETIME        NOT NULL DEFAULT GETDATE(),
     [parent]            INT             NOT NULL,
     [evt]               INT             NOT NULL,
     [endpoint]          NVARCHAR(200)   NOT NULL,
