@@ -12,8 +12,7 @@ namespace MiddleWare.Controllers
     [RoutePrefix("api/somiod")]
     public class SomiodController : ApiController
     {
-        private readonly string connectionString =
-            ConfigurationManager.ConnectionStrings["SomiodConnStr"].ConnectionString;
+        string connectionString = Properties.Settings.Default.ConnStr;
 
         // =====================================================================
         // APPLICATION
