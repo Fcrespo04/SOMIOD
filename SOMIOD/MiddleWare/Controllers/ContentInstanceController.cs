@@ -41,7 +41,7 @@ namespace MiddleWare.Controllers
         {
             try
             {
-                // 1. Obter o objeto ANTES de apagar
+                // 1. Obter o objeto ANTES de apagar (Contém o ParentId que é o ID do Container)
                 var ciToDelete = BD_Access.GetContentInstance(appName, contName, ciName);
 
                 if (ciToDelete == null) return NotFound();
@@ -50,21 +50,12 @@ namespace MiddleWare.Controllers
                 if (BD_Access.DeleteContentInstance(appName, contName, ciName))
                 {
                     // 3. Disparar Notificação de Eliminação (Evento 2 = Deletion)
-                    // Precisamos do ID do Container pai para encontrar os subscritores
-                    // (Estou a assumir que tens um método GetResourceId ou similar na BD_Access, 
-                    // ou podes usar o ParentId que vem no objeto ciToDelete se o carregares)
+                    // O ciToDelete.ParentId é o ID do Container Pai
+                    int containerId = ciToDelete.ParentId;
 
-                    int? appId = BD_Access.GetResourceId("application", appName, null);
-                    if (appId != null)
-                    {
-                        int? containerId = BD_Access.GetResourceId("container", contName, appId);
-
-                        if (containerId != null)
-                        {
-                            // Envia notificação de tipo 2 (Delete)
-                            BD_Access.SendNotifications(containerId.Value, 2, ciToDelete);
-                        }
-                    }
+                    // Envia notificação de tipo 2 (Delete) usando o ID que já temos
+                    // NOTA: Certifique-se que o BD_Access.SendNotifications aceita o ID do Container.
+                    BD_Access.SendNotifications(containerId, 2, ciToDelete);
 
                     return StatusCode(System.Net.HttpStatusCode.NoContent);
                 }

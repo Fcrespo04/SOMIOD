@@ -88,11 +88,11 @@ namespace MiddleWare.Controllers
 
                     case "content-instance":
                         // Discovery recursivo de todos os dados desta app
-                        return Ok(BD_Access.DiscoverContentInstances(appName));
+                        return Ok(BD_Access.DiscoverContentInstances(appName, null));
 
                     case "subscription":
                         // Discovery recursivo de todas as subscrições desta app
-                        return Ok(BD_Access.DiscoverSubscriptions(appName));
+                        return Ok(BD_Access.DiscoverSubscriptions(appName, null));
 
                     default:
                         return BadRequest("Invalid discovery type");
