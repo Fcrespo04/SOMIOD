@@ -6,6 +6,7 @@ using System.Web.Http;
 using Newtonsoft.Json.Linq;
 using MiddleWare.Models;
 using MiddleWare.Helpers;
+using System.Data.SqlClient;
 
 namespace MiddleWare.Controllers
 {
@@ -13,8 +14,7 @@ namespace MiddleWare.Controllers
     public class ContainerController : ApiController
     {
         // =====================================================================
-        // GET CONTAINER ou DISCOVERY (de filhos)
-        // Rota: GET api/somiod/{appName}/{contName}
+        // GET CONTAINER ou DISCOVERY (de filhos) (GET api/somiod/{appName}/{contName})
         // =====================================================================
         [HttpGet]
         [Route("{appName}/{contName}")]
@@ -22,7 +22,7 @@ namespace MiddleWare.Controllers
         {
             try
             {
-                // 1. Verificar Headers de Discovery
+                // Se existir o Header de somiod-discovery, o seu valor é analisado
                 if (Request.Headers.Contains("somiod-discovery"))
                 {
                     var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault();
@@ -45,7 +45,7 @@ namespace MiddleWare.Controllers
                     }
                 }
 
-                // 2. Operação Normal de GET
+                // Caso não exista o header é um get normal
                 var container = BD_Access.GetContainer(appName, contName);
                 if (container == null) return NotFound();
 
@@ -55,13 +55,20 @@ namespace MiddleWare.Controllers
         }
 
         // =====================================================================
-        // UPDATE CONTAINER
-        // Rota: PUT api/somiod/{appName}/{contName}
+        //      UPDATE CONTAINER (PUT api/somiod/{appName}/{contName})
         // =====================================================================
         [HttpPut]
         [Route("{appName}/{contName}")]
         public IHttpActionResult UpdateContainer(string appName, string contName, [FromBody] JObject body)
         {
+            string resType = body?["res-type"]?.ToString();
+
+            // Se o campo vier preenchido e não for "container", rejeita.
+            if (!string.IsNullOrEmpty(resType) && resType != "container")
+            {
+                return Content(HttpStatusCode.BadRequest, "Invalid res-type. Expected 'container' for this operation.");
+            }
+
             string newName = body?["resource-name"]?.ToString();
             if (string.IsNullOrWhiteSpace(newName)) return BadRequest("Missing resource-name");
 
@@ -77,12 +84,24 @@ namespace MiddleWare.Controllers
 
                 return NotFound(); // Ou Conflict se o nome já existir
             }
+            catch (SqlException ex)
+            {
+                // Os números 2627 e 2601 são códigos do SQL Server para violação de chave única (Unique Constraint)
+                if (ex.Number == 2627 || ex.Number == 2601)
+                {
+                    // Retorna 409 Conflict (o standard para "já existe") com mensagem clara
+                    return Content(HttpStatusCode.Conflict,
+                        $"The name '{newName}' is already being used by a container inside this application.");
+                }
+
+                // Se for outro erro de SQL, devolve 500
+                return InternalServerError(ex);
+            }
             catch (Exception ex) { return InternalServerError(ex); }
         }
 
         // =====================================================================
-        // DELETE CONTAINER
-        // Rota: DELETE api/somiod/{appName}/{contName}
+        //       DELETE CONTAINER  (DELETE api/somiod/{appName}/{contName})
         // =====================================================================
         [HttpDelete]
         [Route("{appName}/{contName}")]
@@ -90,19 +109,41 @@ namespace MiddleWare.Controllers
         {
             try
             {
+                // Verificar se o container existe antes de tentar apagar
+                var container = BD_Access.GetContainer(appName, contName);
+                if (container == null) return NotFound();
+
+                // Recolher a lista de filhos antes de fazer o delete para depois exibir
+                var deletedContentInstances = BD_Access.DiscoverContentInstances(appName, contName);
+                var deletedSubscriptions = BD_Access.DiscoverSubscriptions(appName, contName);
+
+                // elimina o cointainer
                 if (BD_Access.DeleteContainer(appName, contName))
                 {
-                    return StatusCode(HttpStatusCode.NoContent);
+                    // prepara o objeto de resposta com todo o conteudo apagado
+                    var report = new
+                    {
+                        message = $"The Container '{contName}' and all his childern were sucessfully deleted.",
+                        deleted_container = contName,
+                        deleted_children = new
+                        {
+                            content_instances_count = deletedContentInstances.Count,
+                            content_instances = deletedContentInstances, // Lista de URLs/Nomes
+                            subscriptions_count = deletedSubscriptions.Count,
+                            subscriptions = deletedSubscriptions     // Lista de URLs/Nomes
+                        }
+                    };
+
+                    return Ok(report);
                 }
+
                 return NotFound();
             }
             catch (Exception ex) { return InternalServerError(ex); }
         }
 
         // =====================================================================
-        // CREATE CHILD (Content-Instance OU Subscription)
-        // Rota: POST api/somiod/{appName}/{contName}
-        // Nota: O endpoint do pai (Container) serve para criar os filhos.
+        // CREATE CHILD (Content-Instance / Subscription) (POST api/somiod/{appName}/{contName})
         // =====================================================================
         [HttpPost]
         [Route("{appName}/{contName}")]
