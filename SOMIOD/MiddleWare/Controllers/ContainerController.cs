@@ -20,38 +20,49 @@ namespace MiddleWare.Controllers
         [Route("{appName}/{contName}")]
         public IHttpActionResult GetContainer(string appName, string contName)
         {
-            try
+            // Se tiver o header, vai para a lógica de Discovery
+            if (Request.Headers.Contains("somiod-discovery"))
             {
-                // Se existir o Header de somiod-discovery, o seu valor é analisado
-                if (Request.Headers.Contains("somiod-discovery"))
-                {
-                    var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault();
-                    switch (type?.ToLower())
-                    {
-                        case "container":
-                            // Retorna o próprio container
-                            return Ok(new List<string> { $"/api/somiod/{appName}/{contName}" });
-
-                        case "content-instance":
-                            // Retorna lista de dados dentro deste container
-                            return Ok(BD_Access.DiscoverContentInstances(appName, contName));
-
-                        case "subscription":
-                            // Retorna lista de subscrições dentro deste container
-                            return Ok(BD_Access.DiscoverSubscriptions(appName, contName));
-
-                        default:
-                            return BadRequest("Invalid discovery type");
-                    }
-                }
-
-                // Caso não exista o header é um get normal
-                var container = BD_Access.GetContainer(appName, contName);
-                if (container == null) return NotFound();
-
-                return Ok(container);
+                return ProcessContainerDiscovery(appName, contName);
             }
-            catch (Exception ex) { return InternalServerError(ex); }
+
+            // Senão, vai para a lógica normal de obter detalhes
+            return GetContainerDetails(appName, contName);
+        }
+
+        private IHttpActionResult ProcessContainerDiscovery(string appName, string contName)
+        {
+            // Antes de descobrir filhos, garantimos que este container existe mesmo.
+            var existingContainer = BD_Access.GetContainer(appName, contName);
+            if (existingContainer == null)
+            {
+                return NotFound(); // Retorna 404 se o container não existir
+            }
+
+            var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault()?.ToLower();
+            switch (type)
+            {
+                case "container":
+                    return Ok(new List<string> { $"/api/somiod/{appName}/{contName}" });
+
+                case "content-instance":
+                    return Ok(BD_Access.DiscoverContentInstances(appName, contName));
+
+                case "subscription":
+                    return Ok(BD_Access.DiscoverSubscriptions(appName, contName));
+
+                default:
+                    return BadRequest("Invalid discovery type. Container acts as parent only for 'content-instance' and 'subscription'.");
+            }
+        }
+
+        private IHttpActionResult GetContainerDetails(string appName, string contName)
+        {
+            var cont = BD_Access.GetContainer(appName, contName);
+
+            if (cont == null) return NotFound();
+
+            return Ok(cont);
         }
 
         // =====================================================================

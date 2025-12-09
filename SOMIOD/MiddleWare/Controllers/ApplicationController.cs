@@ -49,20 +49,28 @@ namespace MiddleWare.Controllers
         [Route("")]
         public IHttpActionResult DiscoverRoot()
         {
-            if (Request.Headers.Contains("somiod-discovery"))
+            // Validação: Raiz só suporta Discovery
+            if (!Request.Headers.Contains("somiod-discovery"))
             {
-                var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault();
-
-                // Apenas permite descobrir aplicações na raiz
-                if (type?.ToLower() == "application")
-                {
-                    return Ok(BD_Access.DiscoverApplications());
-                }
-                return BadRequest("Invalid discovery type for root. Only 'application' allowed.");
+                return BadRequest("Global GET is not supported. Please use the 'somiod-discovery' header.");
             }
 
-            // GET All não é suportado sem o header de discovery
-            return Ok(new List<string>());
+            // Encaminha para função específica de Discovery
+            return ProcessRootDiscovery();
+        }
+
+        // Função Privada: Lógica de Discovery da Raiz
+        private IHttpActionResult ProcessRootDiscovery()
+        {
+            var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault()?.ToLower();
+            switch (type)
+            {
+                case "application": return Ok(BD_Access.DiscoverApplications());
+                case "container": return Ok(BD_Access.DiscoverContainers(null));
+                case "content-instance": return Ok(BD_Access.DiscoverContentInstances(null, null));
+                case "subscription": return Ok(BD_Access.DiscoverSubscriptions(null, null));
+                default: return BadRequest("Invalid discovery type.");
+            }
         }
 
         // =====================================================================
@@ -72,39 +80,42 @@ namespace MiddleWare.Controllers
         [Route("{appName}")]
         public IHttpActionResult GetApplication(string appName)
         {
-            // 1. Verificar Headers de Discovery (Listar Filhos)
+            // Decisão: É Discovery ou Get Normal?
             if (Request.Headers.Contains("somiod-discovery"))
             {
-                var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault();
-                switch (type?.ToLower())
-                {
-                    case "application":
-                        // Retorna lista com a própria aplicação (como no enunciado)
-                        return Ok(new List<string> { $"/api/somiod/{appName}" });
+                return ProcessApplicationDiscovery(appName);
+            }
+            return GetApplicationDetails(appName);
+        }
 
-                    case "container":
-                        // Retorna lista de containers desta app
-                        return Ok(BD_Access.DiscoverContainers(appName));
-
-                    case "content-instance":
-                        // Discovery recursivo de todos os dados desta app
-                        return Ok(BD_Access.DiscoverContentInstances(appName, null));
-
-                    case "subscription":
-                        // Discovery recursivo de todas as subscrições desta app
-                        return Ok(BD_Access.DiscoverSubscriptions(appName, null));
-
-                    default:
-                        return BadRequest("Invalid discovery type");
-                }
+        // Função Privada: Apenas Lógica de Discovery
+        private IHttpActionResult ProcessApplicationDiscovery(string appName)
+        {
+            var existingApp = BD_Access.GetApplication(appName);
+            if (existingApp == null)
+            {
+                return NotFound();
             }
 
-            // 2. Operação Normal de GET (Detalhes da App)
+            var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault()?.ToLower();
+            switch (type)
+            {
+                case "application": return Ok(new List<string> { $"/api/somiod/{appName}" });
+                case "container": return Ok(BD_Access.DiscoverContainers(appName));
+                case "content-instance": return Ok(BD_Access.DiscoverContentInstances(appName, null));
+                case "subscription": return Ok(BD_Access.DiscoverSubscriptions(appName, null));
+                default: return BadRequest("Invalid discovery type.");
+            }
+        }
+
+        // Função Privada: Apenas Lógica de Obter Recurso com GET normal
+        private IHttpActionResult GetApplicationDetails(string appName)
+        {
             var app = BD_Access.GetApplication(appName);
             if (app == null) return NotFound();
-
             return Ok(app);
         }
+
 
         // =====================================================================
         //          UPDATE APPLICATION (PUT api/somiod/{appName})

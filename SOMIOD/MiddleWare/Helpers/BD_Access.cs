@@ -90,21 +90,6 @@ namespace MiddleWare.Helpers
             }
         }
 
-        public static List<string> DiscoverApplications()
-        {
-            var list = new List<string>();
-            using (var conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                var cmd = new SqlCommand("SELECT [resource-name] FROM application", conn);
-                using (var r = cmd.ExecuteReader())
-                {
-                    while (r.Read()) list.Add($"/api/somiod/{r["resource-name"]}");
-                }
-            }
-            return list;
-        }
-
         // ==================================================================================
         //                                 CONTAINER
         // ==================================================================================
@@ -186,23 +171,6 @@ namespace MiddleWare.Helpers
                 cmd.Parameters.AddWithValue("@app", appName);
                 return cmd.ExecuteNonQuery() > 0;
             }
-        }
-
-        public static List<string> DiscoverContainers(string appName)
-        {
-            var list = new List<string>();
-            using (var conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                var sql = "SELECT c.[resource-name] FROM container c JOIN application a ON c.parent=a.id WHERE a.[resource-name]=@app";
-                var cmd = new SqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@app", appName);
-                using (var r = cmd.ExecuteReader())
-                {
-                    while (r.Read()) list.Add($"/api/somiod/{appName}/{r["resource-name"]}");
-                }
-            }
-            return list;
         }
 
         // ==================================================================================
@@ -290,39 +258,6 @@ namespace MiddleWare.Helpers
             }
         }
 
-        public static List<string> DiscoverContentInstances(string appName, string contName = null)
-        {
-            var list = new List<string>();
-            using (var conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                string sql;
-                SqlCommand cmd;
-
-                if (contName == null) // Discovery na App (Recursivo)
-                {
-                    sql = "SELECT c.[resource-name] as cont, ci.[resource-name] as ci FROM [content-instance] ci " +
-                          "JOIN container c ON ci.parent=c.id JOIN application a ON c.parent=a.id WHERE a.[resource-name]=@app";
-                    cmd = new SqlCommand(sql, conn);
-                    cmd.Parameters.AddWithValue("@app", appName);
-                    using (var r = cmd.ExecuteReader())
-                        while (r.Read()) list.Add($"/api/somiod/{appName}/{r["cont"]}/{r["ci"]}");
-                }
-                else // Discovery no Container
-                {
-                    sql = "SELECT ci.[resource-name] as ci FROM [content-instance] ci " +
-                          "JOIN container c ON ci.parent=c.id JOIN application a ON c.parent=a.id " +
-                          "WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
-                    cmd = new SqlCommand(sql, conn);
-                    cmd.Parameters.AddWithValue("@app", appName);
-                    cmd.Parameters.AddWithValue("@cont", contName);
-                    using (var r = cmd.ExecuteReader())
-                        while (r.Read()) list.Add($"/api/somiod/{appName}/{contName}/{r["ci"]}");
-                }
-            }
-            return list;
-        }
-
         // ==================================================================================
         //                                SUBSCRIPTION 
         // ==================================================================================
@@ -407,35 +342,95 @@ namespace MiddleWare.Helpers
             }
         }
 
-        public static List<string> DiscoverSubscriptions(string appName, string contName = null)
+        // ==================================================================================
+        //                               SOMIOD-DISCOVERY
+        // ==================================================================================
+
+        public static List<string> DiscoverApplications()
         {
             var list = new List<string>();
             using (var conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string sql;
-                SqlCommand cmd;
+                var cmd = new SqlCommand("SELECT [resource-name] FROM application", conn);
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) list.Add($"/api/somiod/{r["resource-name"]}");
+            }
+            return list;
+        }
 
-                if (contName == null) // Discovery na App
-                {
-                    sql = "SELECT c.[resource-name] as cont, s.[resource-name] as sub FROM subscription s " +
-                          "JOIN container c ON s.parent=c.id JOIN application a ON c.parent=a.id WHERE a.[resource-name]=@app";
-                    cmd = new SqlCommand(sql, conn);
-                    cmd.Parameters.AddWithValue("@app", appName);
-                    using (var r = cmd.ExecuteReader())
-                        while (r.Read()) list.Add($"/api/somiod/{appName}/{r["cont"]}/subs/{r["sub"]}");
-                }
-                else // Discovery no Container
-                {
-                    sql = "SELECT s.[resource-name] as sub FROM subscription s " +
-                          "JOIN container c ON s.parent=c.id JOIN application a ON c.parent=a.id " +
-                          "WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
-                    cmd = new SqlCommand(sql, conn);
-                    cmd.Parameters.AddWithValue("@app", appName);
-                    cmd.Parameters.AddWithValue("@cont", contName);
-                    using (var r = cmd.ExecuteReader())
-                        while (r.Read()) list.Add($"/api/somiod/{appName}/{contName}/subs/{r["sub"]}");
-                }
+        public static List<string> DiscoverContainers(string appName = null)
+        {
+            var list = new List<string>();
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "SELECT a.[resource-name] as app, c.[resource-name] as cont " +
+                             "FROM container c JOIN application a ON c.parent=a.id";
+
+                // Se appName for fornecido, filtra. Se for null, traz tudo (Root Discovery)
+                if (appName != null) sql += " WHERE a.[resource-name]=@app";
+
+                var cmd = new SqlCommand(sql, conn);
+                if (appName != null) cmd.Parameters.AddWithValue("@app", appName);
+
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) list.Add($"/api/somiod/{r["app"]}/{r["cont"]}");
+            }
+            return list;
+        }
+
+        public static List<string> DiscoverContentInstances(string appName = null, string contName = null)
+        {
+            var list = new List<string>();
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "SELECT a.[resource-name] as app, c.[resource-name] as cont, ci.[resource-name] as ci " +
+                             "FROM [content-instance] ci " +
+                             "JOIN container c ON ci.parent=c.id " +
+                             "JOIN application a ON c.parent=a.id";
+
+                // Construção dinâmica da query
+                if (appName != null && contName != null)
+                    sql += " WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
+                else if (appName != null)
+                    sql += " WHERE a.[resource-name]=@app";
+                // Se ambos null -> Global Discovery
+
+                var cmd = new SqlCommand(sql, conn);
+                if (appName != null) cmd.Parameters.AddWithValue("@app", appName);
+                if (contName != null) cmd.Parameters.AddWithValue("@cont", contName);
+
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) list.Add($"/api/somiod/{r["app"]}/{r["cont"]}/{r["ci"]}");
+            }
+            return list;
+        }
+
+        public static List<string> DiscoverSubscriptions(string appName = null, string contName = null)
+        {
+            var list = new List<string>();
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                string sql = "SELECT a.[resource-name] as app, c.[resource-name] as cont, s.[resource-name] as sub " +
+                             "FROM subscription s " +
+                             "JOIN container c ON s.parent=c.id " +
+                             "JOIN application a ON c.parent=a.id";
+
+                if (appName != null && contName != null)
+                    sql += " WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
+                else if (appName != null)
+                    sql += " WHERE a.[resource-name]=@app";
+                // Se ambos null -> Global Discovery
+
+                var cmd = new SqlCommand(sql, conn);
+                if (appName != null) cmd.Parameters.AddWithValue("@app", appName);
+                if (contName != null) cmd.Parameters.AddWithValue("@cont", contName);
+
+                using (var r = cmd.ExecuteReader())
+                    while (r.Read()) list.Add($"/api/somiod/{r["app"]}/{r["cont"]}/subs/{r["sub"]}");
             }
             return list;
         }

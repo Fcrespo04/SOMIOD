@@ -1,7 +1,9 @@
-﻿using System;
-using System.Web.Http;
-using MiddleWare.Helpers; // Onde está a tua BD_Access
+﻿using MiddleWare.Helpers; // Onde está a tua BD_Access
 using MiddleWare.Models;  // Onde estão os teus Models
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web.Http;
 
 namespace MiddleWare.Controllers
 {
@@ -16,19 +18,35 @@ namespace MiddleWare.Controllers
         [Route("{appName}/{contName}/{ciName}")]
         public IHttpActionResult GetContentInstance(string appName, string contName, string ciName)
         {
-            try
+            if (Request.Headers.Contains("somiod-discovery"))
             {
-                // Busca os dados usando a classe auxiliar
-                var ci = BD_Access.GetContentInstance(appName, contName, ciName);
-
-                if (ci == null) return NotFound();
-
-                return Ok(ci);
+                return ProcessDiscovery(appName, contName, ciName);
             }
-            catch (Exception ex)
+            return GetDetails(appName, contName, ciName);
+        }
+
+        private IHttpActionResult ProcessDiscovery(string appName, string contName, string ciName)
+        {
+            // 1. Verificar Existência (Evita rotas fantasmas)
+            var existingCI = BD_Access.GetContentInstance(appName, contName, ciName);
+            if (existingCI == null) return NotFound();
+
+            var type = Request.Headers.GetValues("somiod-discovery").FirstOrDefault()?.ToLower();
+
+            // Um Content-Instance é uma folha, só se descobre a si próprio
+            if (type == "content-instance")
             {
-                return InternalServerError(ex);
+                return Ok(new List<string> { $"/api/somiod/{appName}/{contName}/{ciName}" });
             }
+
+            return BadRequest("Invalid discovery type. Content-Instance is a leaf node.");
+        }
+
+        private IHttpActionResult GetDetails(string appName, string contName, string ciName)
+        {
+            var ci = BD_Access.GetContentInstance(appName, contName, ciName);
+            if (ci == null) return NotFound();
+            return Ok(ci);
         }
 
         // =====================================================================
