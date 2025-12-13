@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using MiddleWare.Models;
+using uPLibrary.Networking.M2Mqtt;
+using uPLibrary.Networking.M2Mqtt.Messages;
+using System.Net;
 
 namespace MiddleWare.Helpers
 {
     public static class BD_Access
     {
-        // Connection string to access DB
-        private static readonly string connectionString = Properties.Settings.Default.ConnStr;
+        // Connection string do Web.config
+        private static readonly string connectionString = ConfigurationManager.ConnectionStrings["SomiodConnStr"].ConnectionString;
 
         // ==================================================================================
         //                                 APPLICATION 
@@ -22,10 +25,8 @@ namespace MiddleWare.Helpers
                 using (var conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-                    // Unique name check
                     app.Name = GetUniqueName(conn, "application", app.Name, null);
 
-                    // if CreationDate not provided, set to now
                     if (string.IsNullOrEmpty(app.CreationDate))
                         app.CreationDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
 
@@ -65,16 +66,11 @@ namespace MiddleWare.Helpers
             using (var conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                // Nota: Update direto pode falhar se newName já existir. 
-                // Se quiseres renomeação automática no update, terias de usar GetUniqueName aqui também.
                 var cmd = new SqlCommand("UPDATE application SET [resource-name]=@new WHERE [resource-name]=@old", conn);
                 cmd.Parameters.AddWithValue("@new", newName);
                 cmd.Parameters.AddWithValue("@old", oldName);
 
-                if (cmd.ExecuteNonQuery() > 0)
-                {
-                    return GetApplication(newName);
-                }
+                if (cmd.ExecuteNonQuery() > 0) return GetApplication(newName);
                 return null;
             }
         }
@@ -184,7 +180,6 @@ namespace MiddleWare.Helpers
                 using (var conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-                    // Obter IDs dos pais
                     int? appId = GetResourceId(conn, "application", appName, null);
                     if (appId == null) return false;
                     int? contId = GetResourceId(conn, "container", contName, appId);
@@ -343,7 +338,7 @@ namespace MiddleWare.Helpers
         }
 
         // ==================================================================================
-        //                               SOMIOD-DISCOVERY
+        //                                DISCOVERY
         // ==================================================================================
 
         public static List<string> DiscoverApplications()
@@ -365,10 +360,7 @@ namespace MiddleWare.Helpers
             using (var conn = new SqlConnection(connectionString))
             {
                 conn.Open();
-                string sql = "SELECT a.[resource-name] as app, c.[resource-name] as cont " +
-                             "FROM container c JOIN application a ON c.parent=a.id";
-
-                // Se appName for fornecido, filtra. Se for null, traz tudo (Root Discovery)
+                string sql = "SELECT a.[resource-name] as app, c.[resource-name] as cont FROM container c JOIN application a ON c.parent=a.id";
                 if (appName != null) sql += " WHERE a.[resource-name]=@app";
 
                 var cmd = new SqlCommand(sql, conn);
@@ -387,16 +379,10 @@ namespace MiddleWare.Helpers
             {
                 conn.Open();
                 string sql = "SELECT a.[resource-name] as app, c.[resource-name] as cont, ci.[resource-name] as ci " +
-                             "FROM [content-instance] ci " +
-                             "JOIN container c ON ci.parent=c.id " +
-                             "JOIN application a ON c.parent=a.id";
+                             "FROM [content-instance] ci JOIN container c ON ci.parent=c.id JOIN application a ON c.parent=a.id";
 
-                // Construção dinâmica da query
-                if (appName != null && contName != null)
-                    sql += " WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
-                else if (appName != null)
-                    sql += " WHERE a.[resource-name]=@app";
-                // Se ambos null -> Global Discovery
+                if (appName != null && contName != null) sql += " WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
+                else if (appName != null) sql += " WHERE a.[resource-name]=@app";
 
                 var cmd = new SqlCommand(sql, conn);
                 if (appName != null) cmd.Parameters.AddWithValue("@app", appName);
@@ -415,15 +401,10 @@ namespace MiddleWare.Helpers
             {
                 conn.Open();
                 string sql = "SELECT a.[resource-name] as app, c.[resource-name] as cont, s.[resource-name] as sub " +
-                             "FROM subscription s " +
-                             "JOIN container c ON s.parent=c.id " +
-                             "JOIN application a ON c.parent=a.id";
+                             "FROM subscription s JOIN container c ON s.parent=c.id JOIN application a ON c.parent=a.id";
 
-                if (appName != null && contName != null)
-                    sql += " WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
-                else if (appName != null)
-                    sql += " WHERE a.[resource-name]=@app";
-                // Se ambos null -> Global Discovery
+                if (appName != null && contName != null) sql += " WHERE a.[resource-name]=@app AND c.[resource-name]=@cont";
+                else if (appName != null) sql += " WHERE a.[resource-name]=@app";
 
                 var cmd = new SqlCommand(sql, conn);
                 if (appName != null) cmd.Parameters.AddWithValue("@app", appName);
@@ -436,10 +417,71 @@ namespace MiddleWare.Helpers
         }
 
         // ==================================================================================
-        //                                  HELPERS 
+        //                       NOTIFICAÇÕES (MQTT - O MOTOR)
         // ==================================================================================
 
-        // Method to get resource ID by name and optional parent ID
+        public static void SendNotifications(int containerId, int evtType, object resourceData)
+        {
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                var sql = "SELECT endpoint FROM subscription WHERE parent=@pid AND (evt=@type OR evt=0)";
+                var cmd = new SqlCommand(sql, conn);
+                cmd.Parameters.AddWithValue("@pid", containerId);
+                cmd.Parameters.AddWithValue("@type", evtType);
+
+                using (var r = cmd.ExecuteReader())
+                {
+                    while (r.Read())
+                    {
+                        string endpointUrl = (string)r["endpoint"];
+
+                        if (endpointUrl.ToLower().StartsWith("mqtt://"))
+                        {
+                            try
+                            {
+                                string clean = endpointUrl.Substring(7);
+                                int barra = clean.IndexOf('/');
+
+                                if (barra > 0)
+                                {
+                                    string ipString = clean.Substring(0, barra);
+                                    string topico = clean.Substring(barra + 1);
+
+                                    // FIX CRÍTICO: Se a BD diz "localhost", forçamos "127.0.0.1" para a API IPv4
+                                    if (ipString.ToLower() == "localhost") ipString = "127.0.0.1";
+
+                                    string payload = (resourceData is ContentInstance ci) ? ci.Content : "Evento " + evtType;
+
+                                    MqttClient client = new MqttClient(IPAddress.Parse(ipString));
+                                    client.Connect(Guid.NewGuid().ToString());
+
+                                    if (client.IsConnected)
+                                    {
+                                        // FIX CRÍTICO: QoS 0 para rapidez
+                                        client.Publish(topico,
+                                            System.Text.Encoding.UTF8.GetBytes(payload),
+                                            MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE,
+                                            false);
+
+                                        // FIX CRÍTICO: Sleep para dar tempo à mensagem de sair
+                                        System.Threading.Thread.Sleep(500);
+
+                                        client.Disconnect();
+                                    }
+                                }
+                            }
+                            catch (Exception) { /* Ignora erros de envio */ }
+                        }
+                    }
+                }
+            }
+        }
+
+        // ==================================================================================
+        //                                HELPERS PRIVADOS
+        // ==================================================================================
+
         public static int? GetResourceId(SqlConnection conn, string table, string name, int? parentId)
         {
             string sql = parentId == null
@@ -455,7 +497,6 @@ namespace MiddleWare.Helpers
             }
         }
 
-        // Method used to get resource ID without existing connection
         public static int? GetResourceId(string table, string name, int? parentId)
         {
             using (var conn = new SqlConnection(connectionString))
@@ -465,10 +506,8 @@ namespace MiddleWare.Helpers
             }
         }
 
-        // Method to generate a unique resource name within its parent
         private static string GetUniqueName(SqlConnection conn, string tableName, string baseName, int? parentId)
         {
-            // verify if the baseName already exists
             string checkSql = parentId == null
                 ? $"SELECT COUNT(1) FROM [{tableName}] WHERE [resource-name]=@name"
                 : $"SELECT COUNT(1) FROM [{tableName}] WHERE [resource-name]=@name AND parent=@pid";
@@ -477,75 +516,16 @@ namespace MiddleWare.Helpers
             {
                 cmd.Parameters.AddWithValue("@name", baseName);
                 if (parentId != null) cmd.Parameters.AddWithValue("@pid", parentId);
-
                 int count = (int)cmd.ExecuteScalar();
-
-                // If not exists, return baseName directly
                 if (count == 0) return baseName;
             }
 
-            // If exists, get the next ID using IDENT_CURRENT
             string idSql = $"SELECT IDENT_CURRENT('{tableName}')";
-
             using (var cmd = new SqlCommand(idSql, conn))
             {
                 object result = cmd.ExecuteScalar();
-
                 int nextId = (result != DBNull.Value) ? Convert.ToInt32(result) + 1 : 1;
-
-                // Return the new unique name with the next ID appended as suffix
                 return $"{baseName}_{nextId}";
-            }
-        }
-
-        // method to get subscription endpoints for notifications
-        public static List<string> GetSubscriptionEndpoints(string appName, string contName, int evtType)
-        {
-            var list = new List<string>();
-            using (var conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                // Busca o ID do container primeiro
-                int? appId = GetResourceId(conn, "application", appName, null);
-                if (appId == null) return list;
-                int? contId = GetResourceId(conn, "container", contName, appId);
-                if (contId == null) return list;
-
-                // Busca endpoints interessados
-                // evt = 1 (Create), 2 (Delete). Se a subscrição tiver evt=0 (ambos), também apanha.
-                var sql = "SELECT endpoint FROM subscription WHERE parent=@pid AND (evt=@type OR evt=0)";
-                var cmd = new SqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@pid", contId);
-                cmd.Parameters.AddWithValue("@type", evtType);
-
-                using (var r = cmd.ExecuteReader())
-                {
-                    while (r.Read()) list.Add((string)r["endpoint"]);
-                }
-            }
-            return list;
-        }
-
-        // Metohod to send notifications to subscribers
-        public static void SendNotifications(int containerId, int evtType, object resourceData)
-        {
-            using (var conn = new SqlConnection(connectionString))
-            {
-                conn.Open();
-                var sql = "SELECT endpoint FROM subscription WHERE parent=@pid AND (evt=@type OR evt=0)";
-                var cmd = new SqlCommand(sql, conn);
-                cmd.Parameters.AddWithValue("@pid", containerId);
-                cmd.Parameters.AddWithValue("@type", evtType);
-
-                using (var r = cmd.ExecuteReader())
-                {
-                    while (r.Read())
-                    {
-                        string endpoint = (string)r["endpoint"];
-                        // TODO: Implementar lógica de envio (MQTT/HTTP)
-                        System.Diagnostics.Debug.WriteLine($"[NOTIFY] Enviar {resourceData} para {endpoint} (Evento {evtType})");
-                    }
-                }
             }
         }
     }

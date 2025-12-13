@@ -121,9 +121,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Data\somiod_db.mdf" />
-    <Content Include="App_Data\somiod_db_log.ldf">
-      <DependentUpon>somiod_db.mdf</DependentUpon>
+    <Content Include="App_Data\somiod_bd.mdf" />
+    <Content Include="App_Data\somiod_bd_log.ldf">
+      <DependentUpon>somiod_bd.mdf</DependentUpon>
     </Content>
     <Content Include="App_Data\TabelasBaseDeDados.sql" />
     <Content Include="Global.asax" />

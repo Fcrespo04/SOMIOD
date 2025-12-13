@@ -98,6 +98,7 @@
             this.buttonAbrirCela2.TabIndex = 5;
             this.buttonAbrirCela2.Text = "Abrir";
             this.buttonAbrirCela2.UseVisualStyleBackColor = true;
+            this.buttonAbrirCela2.Click += new System.EventHandler(this.buttonAbrirCela2_Click_1);
             // 
             // buttonAbrirPortaEntrada
             // 
@@ -107,6 +108,7 @@
             this.buttonAbrirPortaEntrada.TabIndex = 6;
             this.buttonAbrirPortaEntrada.Text = "Abrir";
             this.buttonAbrirPortaEntrada.UseVisualStyleBackColor = true;
+            this.buttonAbrirPortaEntrada.Click += new System.EventHandler(this.buttonAbrirPortaEntrada_Click);
             // 
             // buttonFecharCela1
             // 
@@ -126,6 +128,7 @@
             this.buttonFecharCela2.TabIndex = 8;
             this.buttonFecharCela2.Text = "Fechar";
             this.buttonFecharCela2.UseVisualStyleBackColor = true;
+            this.buttonFecharCela2.Click += new System.EventHandler(this.buttonFecharCela2_Click_1);
             // 
             // buttonFecharPortaEntrada
             // 
@@ -135,6 +138,7 @@
             this.buttonFecharPortaEntrada.TabIndex = 9;
             this.buttonFecharPortaEntrada.Text = "Fechar";
             this.buttonFecharPortaEntrada.UseVisualStyleBackColor = true;
+            this.buttonFecharPortaEntrada.Click += new System.EventHandler(this.buttonFecharPortaEntrada_Click);
             // 
             // FormControlador
             // 

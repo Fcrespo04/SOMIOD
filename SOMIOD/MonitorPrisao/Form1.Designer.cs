@@ -192,6 +192,7 @@
             this.estadoCela1.Size = new System.Drawing.Size(75, 20);
             this.estadoCela1.TabIndex = 10;
             this.estadoCela1.Text = "ABERTO";
+            this.estadoCela1.Click += new System.EventHandler(this.estadoCela1_Click);
             // 
             // estadoCela2
             // 
