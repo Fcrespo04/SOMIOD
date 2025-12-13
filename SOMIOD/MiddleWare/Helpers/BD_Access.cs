@@ -12,7 +12,7 @@ namespace MiddleWare.Helpers
     public static class BD_Access
     {
         // Connection string do Web.config
-        private static readonly string connectionString = ConfigurationManager.ConnectionStrings["SomiodConnStr"].ConnectionString;
+        private static readonly string connectionString = Properties.Settings.Default.ConnStr;
 
         // ==================================================================================
         //                                 APPLICATION 
