@@ -25,8 +25,18 @@ namespace MiddleWare.Helpers
                 using (var conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-                    app.Name = GetUniqueName(conn, "application", app.Name, null);
 
+                    // CORREÇÃO: Em vez de GetUniqueName, verificamos se JÁ EXISTE.
+                    // Se existir, devolvemos true (sucesso) e não criamos nada novo.
+                    string checkSql = "SELECT COUNT(1) FROM application WHERE [resource-name]=@name";
+                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@name", app.Name);
+                        int exists = (int)cmdCheck.ExecuteScalar();
+                        if (exists > 0) return true; // Já existe? Perfeito, usa essa.
+                    }
+
+                    // Se não existe, cria com a data de hoje
                     if (string.IsNullOrEmpty(app.CreationDate))
                         app.CreationDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
 
@@ -100,7 +110,16 @@ namespace MiddleWare.Helpers
                     int? parentId = GetResourceId(conn, "application", appName, null);
                     if (parentId == null) return false;
 
-                    container.Name = GetUniqueName(conn, "container", container.Name, parentId);
+                    // CORREÇÃO: Verificar se este contentor JÁ EXISTE dentro desta app.
+                    string checkSql = "SELECT COUNT(1) FROM container WHERE [resource-name]=@name AND parent=@pid";
+                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@name", container.Name);
+                        cmdCheck.Parameters.AddWithValue("@pid", parentId);
+                        int exists = (int)cmdCheck.ExecuteScalar();
+                        if (exists > 0) return true; // Já existe? Perfeito.
+                    }
+
                     if (string.IsNullOrEmpty(container.CreationDate))
                         container.CreationDate = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
 

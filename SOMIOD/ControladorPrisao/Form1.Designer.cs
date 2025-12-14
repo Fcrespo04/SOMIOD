@@ -158,6 +158,7 @@
             this.Controls.Add(this.label1);
             this.Name = "FormControlador";
             this.Text = "Controlador Porta";
+            this.Load += new System.EventHandler(this.FormControlador_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

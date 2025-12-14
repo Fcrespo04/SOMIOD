@@ -8,6 +8,7 @@ namespace ControladorPrisao
         public FormControlador()
         {
             InitializeComponent();
+
         }
 
         // =========================================================
@@ -95,6 +96,17 @@ namespace ControladorPrisao
             {
                 MessageBox.Show("Erro ao enviar comando: " + ex.Message, "Erro");
             }
+        }
+
+        private async void FormControlador_Load(object sender, EventArgs e)
+        {
+            // O Controlador regista a sua própria existência na BD
+            // Isto cria a SEGUNDA aplicação na tabela Application (ex: ID 2)
+            try
+            {
+                await RestHelper.CreateApplication("controlador");
+            }
+            catch { }
         }
     }
 }
