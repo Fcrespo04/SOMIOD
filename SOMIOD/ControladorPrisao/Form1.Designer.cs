@@ -38,6 +38,8 @@
             this.buttonFecharCela1 = new System.Windows.Forms.Button();
             this.buttonFecharCela2 = new System.Windows.Forms.Button();
             this.buttonFecharPortaEntrada = new System.Windows.Forms.Button();
+            this.buttonAbrirTudo = new System.Windows.Forms.Button();
+            this.buttonFecharTudo = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -98,6 +100,7 @@
             this.buttonAbrirCela2.TabIndex = 5;
             this.buttonAbrirCela2.Text = "Abrir";
             this.buttonAbrirCela2.UseVisualStyleBackColor = true;
+            this.buttonAbrirCela2.Click += new System.EventHandler(this.buttonAbrirCela2_Click_1);
             // 
             // buttonAbrirPortaEntrada
             // 
@@ -107,6 +110,7 @@
             this.buttonAbrirPortaEntrada.TabIndex = 6;
             this.buttonAbrirPortaEntrada.Text = "Abrir";
             this.buttonAbrirPortaEntrada.UseVisualStyleBackColor = true;
+            this.buttonAbrirPortaEntrada.Click += new System.EventHandler(this.buttonAbrirPortaEntrada_Click);
             // 
             // buttonFecharCela1
             // 
@@ -126,6 +130,7 @@
             this.buttonFecharCela2.TabIndex = 8;
             this.buttonFecharCela2.Text = "Fechar";
             this.buttonFecharCela2.UseVisualStyleBackColor = true;
+            this.buttonFecharCela2.Click += new System.EventHandler(this.buttonFecharCela2_Click_1);
             // 
             // buttonFecharPortaEntrada
             // 
@@ -135,6 +140,27 @@
             this.buttonFecharPortaEntrada.TabIndex = 9;
             this.buttonFecharPortaEntrada.Text = "Fechar";
             this.buttonFecharPortaEntrada.UseVisualStyleBackColor = true;
+            this.buttonFecharPortaEntrada.Click += new System.EventHandler(this.buttonFecharPortaEntrada_Click);
+            // 
+            // buttonAbrirTudo
+            // 
+            this.buttonAbrirTudo.Location = new System.Drawing.Point(64, 260);
+            this.buttonAbrirTudo.Name = "buttonAbrirTudo";
+            this.buttonAbrirTudo.Size = new System.Drawing.Size(167, 23);
+            this.buttonAbrirTudo.TabIndex = 10;
+            this.buttonAbrirTudo.Text = "Abrir_Todas";
+            this.buttonAbrirTudo.UseVisualStyleBackColor = true;
+            this.buttonAbrirTudo.Click += new System.EventHandler(this.buttonAbrirTudo_Click);
+            // 
+            // buttonFecharTudo
+            // 
+            this.buttonFecharTudo.Location = new System.Drawing.Point(267, 260);
+            this.buttonFecharTudo.Name = "buttonFecharTudo";
+            this.buttonFecharTudo.Size = new System.Drawing.Size(182, 23);
+            this.buttonFecharTudo.TabIndex = 11;
+            this.buttonFecharTudo.Text = "Fechar_Todas";
+            this.buttonFecharTudo.UseVisualStyleBackColor = true;
+            this.buttonFecharTudo.Click += new System.EventHandler(this.buttonFecharTudo_Click);
             // 
             // FormControlador
             // 
@@ -142,6 +168,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ActiveBorder;
             this.ClientSize = new System.Drawing.Size(485, 304);
+            this.Controls.Add(this.buttonFecharTudo);
+            this.Controls.Add(this.buttonAbrirTudo);
             this.Controls.Add(this.buttonFecharPortaEntrada);
             this.Controls.Add(this.buttonFecharCela2);
             this.Controls.Add(this.buttonFecharCela1);
@@ -154,6 +182,7 @@
             this.Controls.Add(this.label1);
             this.Name = "FormControlador";
             this.Text = "Controlador Porta";
+            this.Load += new System.EventHandler(this.FormControlador_Load_1);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -171,6 +200,8 @@
         private System.Windows.Forms.Button buttonFecharCela1;
         private System.Windows.Forms.Button buttonFecharCela2;
         private System.Windows.Forms.Button buttonFecharPortaEntrada;
+        private System.Windows.Forms.Button buttonAbrirTudo;
+        private System.Windows.Forms.Button buttonFecharTudo;
     }
 }
 

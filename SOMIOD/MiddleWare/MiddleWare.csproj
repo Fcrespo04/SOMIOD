@@ -121,6 +121,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="App_Data\DropTabela.sql" />
     <Content Include="App_Data\somiod_db.mdf" />
     <Content Include="App_Data\somiod_db_log.ldf">
       <DependentUpon>somiod_db.mdf</DependentUpon>
@@ -141,6 +142,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\BD_Access.cs" />
+    <Compile Include="Helpers\MqttHelper.cs" />
     <Compile Include="Models\Application.cs" />
     <Compile Include="Models\Container.cs" />
     <Compile Include="Models\Content-Instance.cs" />
