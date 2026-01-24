@@ -1,0 +1,579 @@
+{
+	"info": {
+		"_postman_id": "1e4032c4-da5b-41fd-9915-de042ec78e0b",
+		"name": "IS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49050808",
+		"_collection_link": "https://bernardoipl-526534.postman.co/workspace/bernardoipl's-Workspace~a29ca2e1-16c2-4a9d-89b5-ce31566fdf62/collection/49050808-1e4032c4-da5b-41fd-9915-de042ec78e0b?action=share&source=collection_link&creator=49050808"
+	},
+	"item": [
+		{
+			"name": "Create Aplication",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"res-type\": \"application\", \"resource-name\": \"prisao\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:59161/api/somiod",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Container",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"res-type\": \"container\", \"resource-name\": \"cela1\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Content-Instace",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"res-type\": \"content-instance\",\r\n    \"resource-name\": \"comando_abrir_1\",\r\n    \"content\": \"FECHAR\",\r\n    \"content-type\": \"application/json\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create Subscription",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"res-type\": \"subscription\", \"resource-name\": \"subDel\", \"evt\": 2, \"endpoint\": \"mqtt://127.0.0.1:1883\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Aplication",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Container",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Content-Instance",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1/comando_abrir_1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1",
+						"comando_abrir_1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET Subscription",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1/subs/subCela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1",
+						"subs",
+						"subCela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Discovery Application",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "somiod-discovery",
+						"value": "application",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Discovery Container",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "somiod-discovery",
+						"value": "container",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Discovery Content-Instance",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "somiod-discovery",
+						"value": "content-instance",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Discovery Subscription",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "somiod-discovery",
+						"value": "subscription",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Aplication",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"resource-name\": \"prisao1\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Container",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"resource-name\": \"celaA\"}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Content-Instance",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1/comando_abrir_1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1",
+						"comando_abrir_1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Subscription",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1/subs/subCela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1",
+						"subs",
+						"subCela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Container",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao/cela1",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao",
+						"cela1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Application",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:59161/api/somiod/prisao",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "59161",
+					"path": [
+						"api",
+						"somiod",
+						"prisao"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Notification",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<notification>\r\n    <event>CREATE</event>\r\n    <resource>FECHAR</resource>\r\n</notification>",
+					"options": {
+						"raw": {
+							"language": "xml"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/notificacao/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"notificacao",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
