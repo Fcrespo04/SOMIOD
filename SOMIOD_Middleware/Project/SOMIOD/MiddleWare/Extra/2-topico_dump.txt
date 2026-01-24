@@ -1,0 +1,42 @@
+Indique o código necessário para que os dados que estão atualmente a ser enviados 
+para o broker pela API REST (SOMIOD) sejam adicionalmente também enviados para um 
+outro tópico designado “dump”. 
+O endereço do broker mantém-se inalterado.
+
+________________________________________________________________________________________
+
+Ficheiro: MiddleWare/Controllers/ContainerController.cs
+
+Método: CreateChild (dentro do bloco if (resType == "content-instance"))
+
+
+if (BD_Access.CreateContentInstance(appName, contName, newContent))
+{
+    // Obter endpoints e definir tópico normal
+    var endpoints = BD_Access.GetSubscriptionEndpoints(appName, contName, 1);
+    string topico = $"{contName}/creation"; // Ou outro tópico conforme sua configuração atual
+
+    // Construir Mensagem XML
+    string xmlMessage = "<notification>" +
+                            "<event>CREATE</event>" +
+                            $"<resource>{content}</resource>" +
+                        "</notification>";
+
+    // 1. Lógica Existente (Enviar para subscritores)
+    foreach (var ep in endpoints)
+    {
+        string endpointLower = ep.ToLower().Trim();
+        if (endpointLower.StartsWith("mqtt://"))
+        {
+            MqttHelper.PublishToBroker(ep, topico, xmlMessage);
+        }
+        else if (endpointLower.StartsWith("http://") || endpointLower.StartsWith("https://"))
+        {
+            _ = HttpHelper.SendPostRequest(ep, xmlMessage);
+        }
+    }
+
+    // 2. NOVA FUNCIONALIDADE (Adicionar aqui)
+    // Enviar cópia para o tópico "dump" no mesmo broker (localhost)
+    // Nota: O primeiro parâmetro é a connection string do broker, o segundo é o tópico.
+    MqttHelper.PublishToBroker("mqtt://127.0.0.1:1883", "dump", xmlMessage);

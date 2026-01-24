@@ -1,0 +1,20 @@
+2ª adicionar um novo endpoint que retorna uma string 
+
+Criar novo controller na pasta MiddleWare/Controllers
+
+using System.Web.Http;
+
+namespace MiddleWare.Controllers
+{
+    public class NovoController : ApiController
+    {
+        // Passo 3: Definir a Rota e o Método
+        [Route("api/exemplo")] // O endereço final será .../api/exemplo
+        [HttpGet]              // Define que é um pedido GET
+        public IHttpActionResult RetornarString()
+        {
+            // Passo 4: Retornar a string
+            return Ok("A string que queres retornar");
+        }
+    }
+}

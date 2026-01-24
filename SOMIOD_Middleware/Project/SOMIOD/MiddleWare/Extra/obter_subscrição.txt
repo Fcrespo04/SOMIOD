@@ -1,0 +1,35 @@
+4ª  considere as funcionalidades ja existentes no seu middleware SOMIOD (API REST). Apenas em texto, indique que passos 
+executaria (descrever cada um) para obter os detalhes de uma subscription de nome SUB1
+
+
+
+4)
+GET Application -> GET http://localhost:59161/api/somiod -> somiod-discovery: application
+GET application/container -> GET http://localhost:59161/api/somiod/APP_NAME -> somiod-discovery: container
+GET application/container/subscription/SUB1 -> GET http://localhost:59161/api/somiod/ESTGParking/Entradas -> somiod-discovery: subscription
+GET NOTF1 -> GET http://localhost:59161/api/somiod/ESTGParking/Entradas/NOTF1 
+
+
+SE FOR EM CÓDIGO
+
+var client = new RestClient("http://localhost:59161/");
+
+// 1. Discovery App
+var reqApp = new RestRequest("api/somiod", Method.Get);
+reqApp.AddHeader("somiod-discovery", "application");
+// ... processar resposta ...
+
+// 2. Discovery Container (ex: para a app encontrada)
+var reqCont = new RestRequest("api/somiod/ESTGParking", Method.Get);
+reqCont.AddHeader("somiod-discovery", "container");
+// ... processar resposta ...
+
+// 3. Discovery Subscrição
+var reqSubs = new RestRequest("api/somiod/ESTGParking/Entradas", Method.Get);
+reqSubs.AddHeader("somiod-discovery", "subscription");
+// ... processar resposta e encontrar "NOTIF1" ...
+
+// 4. Get Details
+var reqDetalhes = new RestRequest("api/somiod/ESTGParking/Entradas/subs/NOTIF1", Method.Get);
+var response = client.Execute(reqDetalhes);
+// Aqui tens os detalhes no response.Content

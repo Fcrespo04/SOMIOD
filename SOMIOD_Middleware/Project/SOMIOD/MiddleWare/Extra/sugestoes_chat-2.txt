@@ -1,0 +1,90 @@
+____________________________________________________________________________________________________________________________________________________
+
+1.Validação de Input (Regras de Negócio)
+Pergunta: "Altere a API para impedir a criação de Aplicações cujo nome tenha menos de 3 caracteres. Se isso acontecer, deve retornar o código de erro 406 Not Acceptable."
+
+Onde mexer: ApplicationController.cs -> Método CreateApplication.
+
+Como fazer: Adicionar um if logo no início:
+
+C#
+
+string name = body?["resource-name"]?.ToString();
+if (name != null && name.Length < 3)
+{
+    return Content(HttpStatusCode.NotAcceptable, "Nome muito curto.");
+}
+
+____________________________________________________________________________________________________________________________________________________
+
+2. Segurança via Headers
+Pergunta: "Altere o endpoint de criação de Contentores para que só aceite o pedido 
+se o cliente enviar um cabeçalho HTTP chamado Admin-Token 
+com o valor 12345. Caso contrário, retorne 401 Unauthorized."
+
+Onde mexer: ContainerController.cs -> Método CreateContainer.
+
+Como fazer:
+
+C#
+
+if (!Request.Headers.Contains("Admin-Token") || 
+     Request.Headers.GetValues("Admin-Token").First() != "12345")
+{
+    return StatusCode(HttpStatusCode.Unauthorized);
+}
+____________________________________________________________________________________________________________________________________________________
+
+3. Alteração do Conteúdo da Notificação
+Pergunta: "Altere a notificação enviada no evento de CRIAÇÃO (CreateChild) para incluir 
+um novo elemento XML <timestamp> 
+com a data/hora atual, além do <event> e <resource> já existentes."
+
+Onde mexer: ContainerController.cs -> Método CreateChild (dentro do bloco content-instance).
+
+Como fazer: Alterar a construção da string xmlMessage:
+
+C#
+
+string xmlMessage = "<notification>" +
+                    "<event>CREATE</event>" +
+                    $"<resource>{content}</resource>" +
+                    $"<timestamp>{DateTime.Now.ToString("s")}</timestamp>" + // Nova linha
+                    "</notification>";
+
+____________________________________________________________________________________________________________________________________________________
+
+4. Criação de Endpoint de Estatística
+Pergunta: "Adicione um novo endpoint GET api/stats que retorne uma string simples a dizer 'Middleware SOMIOD v1.0 - [O Teu Nome]'."
+
+Onde mexer: Criar um novo controlador (ex: SystemController.cs).
+
+Como fazer:
+
+C#
+
+[Route("api/stats")]
+[HttpGet]
+public IHttpActionResult GetStats()
+{
+    return Ok("Middleware SOMIOD v1.0 - Nome");
+}
+
+____________________________________________________________________________________________________________________________________________________
+
+5. Restrição de Tipos de Conteúdo
+Pergunta: "Altere o sistema para que, ao criar uma content-instance, sejam rejeitados (Bad Request) todos os registos cujo content-type não seja application/xml."
+
+Onde mexer: ContainerController.cs -> Método CreateChild.
+
+Como fazer: Localizar a validação atual e torná-la restritiva:
+
+C#
+
+string contentType = body["content-type"]?.ToString()?.ToLower();
+
+// Código Original aceitava JSON, XML e Text. Alterar para:
+if (contentType != "application/xml") 
+{
+    return BadRequest("Apenas application/xml é permitido.");
+}

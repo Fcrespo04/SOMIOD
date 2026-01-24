@@ -1,0 +1,33 @@
+Altere o middleware SOMIOD de modo a conter um novo controlador 
+denominado Defesa que disponibiliza o seguinte endpoint:
+
+http://<domain:port>/api/defesa
+
+
+A implementação deste controlador deve disponibilizar apenas a 
+ação que permite obter a seguinte informação:
+
+“Chegou à API da defesa”.
+
+_______________________________________________________________________________________________________________________________________________
+
+criar ficheiro - MiddleWare/Controllers/DefesaController.cs
+
+"""
+
+using System.Web.Http;
+
+namespace MiddleWare.Controllers
+{
+    public class DefesaController : ApiController
+    {
+        [Route("api/defesa")]
+        [HttpGet]
+        public IHttpActionResult GetDefesaInfo()
+        {
+            return Ok("Chegou à API da defesa");
+        }
+    }
+}
+
+"""

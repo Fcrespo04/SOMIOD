@@ -1,0 +1,146 @@
+____________________________________________________________________________________________________________________________________________________
+
+1. Adicionar um Novo Campo a um Recurso
+Exemplo: "Adicionar um campo 'description' à Application."
+
+SQL: Alterar a tabela Application no ficheiro SQL ou na base de dados diretamente (ALTER TABLE).
+
+Model: Adicionar public string Description { get; set; } em MiddleWare/Models/Application.cs.
+
+BD_Access: Alterar a função CreateApplication (no INSERT) e GetApplication (no SELECT) em MiddleWare/Helpers/BD_Access.cs para incluir este campo.
+
+Controller: Garantir que o ApplicationController.cs aceita esse campo no JSON do POST.
+
+____________________________________________________________________________________________________________________________________________________
+
+2. Alterar Regras de Validação (Lógica de Negócio)
+Exemplo: "O nome de um Container não pode começar por números."
+
+Local: MiddleWare/Controllers/ContainerController.cs.
+
+Ação: No método CreateContainer (POST), adicionar um if antes de chamar o BD_Access.
+
+C#
+
+if (char.IsDigit(body["resource-name"].ToString()[0])) 
+    return BadRequest("O nome não pode começar por número.");
+
+
+NAO PODE TER ESPAÇOS
+string name = body?["resource-name"]?.ToString();
+if (name.Contains(" ")) return BadRequest("No spaces allowed.");
+____________________________________________________________________________________________________________________________________________________
+
+3. Alterar o Formato das Notificações
+Exemplo: "A notificação deve incluir a data de criação no XML."
+
+Middleware (Envio): Em MiddleWare/Controllers/ContentInstanceController.cs, onde constróis a string XML antes de enviar (ou no Helper de notificação), adicionar a tag <date>.
+
+Monitor (Receção):
+
+Alterar o ficheiro Notification.xsd no projeto Monitor para aceitar o novo elemento.
+
+Atualizar a função ExtractFromXml no Form1.cs do Monitor se for preciso ler esse dado.
+
+____________________________________________________________________________________________________________________________________________________
+
+4. Restrições na Base de Dados
+Exemplo: "Não permitir apagar uma Aplicação se ela tiver Contentores (atualmente o CASCADE apaga tudo)."
+
+Local: MiddleWare/Helpers/BD_Access.cs -> DeleteApplication.
+
+Ação: Antes de executar o comando DELETE, fazer um SELECT COUNT(*) para ver se existem filhos. Se count > 0, lançar erro ou retornar false.
+
+
+
+5. Adicionar Timestamp ao XML"
+
+Enunciado: "Atualmente a notificação envia <event> e <resource>. Altere o código para enviar também <time>HH:mm:ss</time> com a hora atual."
+
+Onde mexer: MiddleWare/Controllers/ContainerController.cs, método CreateChild (na construção da string xmlMessage).
+
+Código:
+
+C#
+
+string xmlMessage = "<notification>" +
+                    // ... outros campos ...
+                    $"<time>{DateTime.Now:HH:mm:ss}</time>" +
+                    "</notification>";
+
+
+
+
+                    1. Enviar Cabeçalho de Autenticação Customizado
+Pergunta: "Por razões de segurança, todas as notificações enviadas via HTTP devem incluir obrigatoriamente um cabeçalho HTTP chamado X-Somiod-Token com o valor Projeto2025. Altere o código para garantir isto."
+
+Onde mexer: MiddleWare/Helpers/HttpHelper.cs
+
+Explicação: O ContainerController apenas chama a função de envio. Para adicionar headers técnicos ao pedido, tens de ir à classe que faz o WebRequest.
+
+Código a alterar (HttpHelper.cs):
+
+C#
+
+public static void SendPostRequest(string uri, string content)
+{
+    // ... código existente de criação do request ...
+    var request = (HttpWebRequest)WebRequest.Create(uri);
+    request.Method = "POST";
+    
+    // --- ADICIONAR ESTA LINHA ---
+    request.Headers.Add("X-Somiod-Token", "Projeto2025");
+    // ----------------------------
+
+    // ... resto do código (escrever bytes, GetResponse, etc)
+}
+2. Diferenciar o Formato (JSON para HTTP, XML para MQTT)
+Pergunta: "Atualmente o sistema envia XML para todos. Altere o controlador para que, se o endpoint for HTTP, seja enviado um JSON {'msg': 'novo registo'}, mantendo o XML apenas para o MQTT."
+
+Onde mexer: MiddleWare/Controllers/ContainerController.cs
+
+Local: Dentro do método CreateChild, no ciclo foreach dos endpoints.
+
+Código a alterar (ContainerController.cs):
+
+C#
+
+// ... dentro do foreach (var ep in endpoints) ...
+
+string endpointLower = ep.ToLower().Trim();
+
+// Envio MQTT (Mantém-se XML)
+if (endpointLower.StartsWith("mqtt://"))
+{
+    MqttHelper.PublishToBroker(ep, topico, xmlMessage);
+}
+// Envio HTTP (Muda para JSON)
+else if (endpointLower.StartsWith("http://") || endpointLower.StartsWith("https://"))
+{
+    // --- ALTERAÇÃO AQUI ---
+    string jsonMessage = "{ \"msg\": \"novo registo\" }";
+    _ = HttpHelper.SendPostRequest(ep, jsonMessage); // Envia o JSON em vez do xmlMessage
+}
+3. Log de Falhas no Envio HTTP
+Pergunta: "O envio de notificações HTTP é instável. Altere o código para que, caso o envio HTTP falhe (excepção), seja gravada uma linha na consola de Debug com a mensagem 'FALHA NO ENVIO PARA: [url]'."
+
+Onde mexer: MiddleWare/Controllers/ContainerController.cs (se quiseres tratar o erro no fluxo) OU HttpHelper.cs (se quiseres tratar dentro do método). A forma mais segura para o exame é no Controller, pois o método do Helper pode não ter try/catch exposto.
+
+Código a alterar (ContainerController.cs):
+
+C#
+
+// ... no bloco else if (http) ...
+else if (endpointLower.StartsWith("http://"))
+{
+    try 
+    {
+        // Tenta enviar
+        HttpHelper.SendPostRequest(ep, xmlMessage); 
+    }
+    catch 
+    {
+        // Se der erro, faz o log pedido
+        System.Diagnostics.Debug.WriteLine($"FALHA NO ENVIO PARA: {ep}");
+    }
+}

@@ -1,0 +1,47 @@
+1ª pergunta como fazer uma aplicação com a API (passos)
+
+1. Criar a Aplicação
+O primeiro passo é registar a aplicação no middleware.
+
+Endpoint: api/somiod
+Método: POST
+{
+    "res-type": "application",
+    "resource-name": "MinhaApp"
+}
+
+
+2. Criar um Contentor (Módulo)
+Depois, cria-se o local onde os dados serão guardados.
+
+Endpoint: api/somiod/MinhaApp
+Método: POST
+{
+    "res-type": "container",
+    "resource-name": "Sensores"
+}
+
+
+3. Enviar Dados (Criar Content-Instance)
+Para enviar informação (ex: temperatura, comandos) para o sistema.
+
+Método: POST
+Endpoint: api/somiod/MinhaApp/Sensores
+{
+    "res-type": "content-instance",
+    "content-type": "text/plain",
+    "content": "25C"
+}
+
+
+4. Receber Dados (Criar Subscription)
+Para que a aplicação seja notificada sempre que entra um novo dado.
+
+Método: POST
+Endpoint: api/somiod/MinhaApp/Sensores
+{
+    "res-type": "subscription",
+    "resource-name": "subMonitor",
+    "evt": "1",
+    "endpoint": "mqtt://127.0.0.1:1883"
+}

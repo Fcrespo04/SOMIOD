@@ -1,0 +1,50 @@
+Altere o código do projeto de modo que os dados que estão 
+atualmente a ser enviados para o broker, sempre que é criado 
+um registo data no middleware SOMIOD, sejam enviados para o broker 
+no canal/tópico <nome do módulo>/creation. O endpoint do broker 
+mantém-se inalterado.
+
+____________________________________________________________________________________________________________________________________________________
+
+modificar o método CreateChild no ficheiro MiddleWare/Controllers/ContainerController.cs.
+O objetivo é alterar a string que define o tópico MQTT no momento da criação de uma Content-Instance. 
+Atualmente, o código usa o formato app/container, e deverá passar a usar container/creation.
+Aqui está o código corrigido com a alteração aplicada:
+
+
+Ficheiro: MiddleWare/Controllers/ContainerController.cs
+
+// ... (código anterior mantém-se igual)
+
+        [HttpPost]
+        [Route("{appName}/{contName}")]
+        public IHttpActionResult CreateChild(string appName, string contName, [FromBody] JObject body)
+        {
+            string resType = body?["res-type"]?.ToString();
+
+            try
+            {
+                if (resType == "content-instance")
+                {
+                    // ... (validação e criação na BD mantém-se igual) ...
+
+                    //Grava na BD
+                    if (BD_Access.CreateContentInstance(appName, contName, newContent))
+                    {
+                        // Busca endpoints interessados no evento 1 (Creation)
+                        var endpoints = BD_Access.GetSubscriptionEndpoints(appName, contName, 1);
+
+                        // --- ALTERAÇÃO AQUI ---
+                        // Requisito: Enviar para o canal <nome do módulo>/creation
+                        // O "módulo" corresponde ao Contentor (contName)
+                        string topico = $"{contName}/creation";
+                        // -----------------------
+
+                        // Mensagem em XML
+                        string xmlMessage = "<notification>" +
+                                                "<event>CREATE</event>" +
+                                                $"<resource>{content}</resource>" +
+                                            "</notification>";
+
+
+                // ... (resto do código mantém-se igual)

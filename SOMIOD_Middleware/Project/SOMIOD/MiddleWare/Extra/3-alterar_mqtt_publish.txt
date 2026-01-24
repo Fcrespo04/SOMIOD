@@ -1,0 +1,5 @@
+3ª alterar o mqttClient.Publish() para mandar para o tópico <containerName>/create
+
+alterar MiddleWare/Controllers/ContainerController.cs
+
+string topico = $"{contName}/creation";

@@ -1,0 +1,20 @@
+Indique o código a implementar para que o controlador da API REST (middleware SOMIOD) 
+desenvolvido no projeto permita uma nova funcionalidade a ser invocada com o seguinte 
+endpoint:
+
+http://<domain:port>/api/somiod/mystatus
+
+
+A implementação deste método deve devolver a string “A API está disponível”.
+
+__________________________________________________________________________________________
+
+Ficheiro: MiddleWare/Controllers/ApplicationController.cs
+
+// GET api/somiod/mystatus
+[Route("mystatus")]
+[HttpGet]
+public IHttpActionResult MyStatus()
+{
+    return Ok("A API está disponível");
+}

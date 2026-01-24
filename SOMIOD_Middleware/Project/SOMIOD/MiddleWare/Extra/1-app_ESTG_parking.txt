@@ -1,0 +1,64 @@
+Considere que o middleware SOMIOD que desenvolveu no projeto está a ser utilizado por uma aplicação do tipo ESTGParking, que contém uma 
+estrutura do tipo:
+
+ESTGParking (app)
+
+Entradas (módulo)
+{"matricula":"aa-bb-00"} (data)
+{"matricula":"bb-cc-03"} (data)
+
+{"matricula":"dd-aa-01"} (data)
+
+Saídas (módulo)
+{"matricula":"aa-bb-00"} (data)
+{"matricula":"bb-cc-03"} (data)
+
+
+Suponha que pretende implementar uma nova aplicação de nome ContaSaídasVeiculos que tem como objetivo contar os veículos da primeira 
+(que saíram do parque).
+
+Em texto, indique que operações teria de executar no middleware, e apenas no middleware SOMIOD, na implementação dessa aplicação.
+
+____________________________________________________________________________________________________________________________________________________
+
+1 Registo da Aplicação (Identidade):
+
+Operação: POST http://<api>/api/somiod
+
+{
+  "res-type": "application",
+  "resource-name": "ContaSaídasVeiculos"
+}
+
+Criar aplicação com nome "ContaSaídasVeiculos". 
+
+***Assumindo que o respetivo container Saídas já existe***
+
+2 Subscrição de Eventos (Consumo em Tempo Real):
+
+Operação: POST http://<api>/api/somiod/ESTGParking/Saídas
+
+{
+  "res-type": "subscription",
+  "resource-name": "sub-saidas",
+  "evt": 1,
+  "endpoint": "<endpoint HTTP ou broker MQTT>"
+}
+
+Criar um recurso do tipo subscription dentro do container "Saídas" da 
+aplicação "ESTGParking".
+
+O pedido deve configurar o evt: 1 (Criação) e fornecer o endpoint (MQTT ou HTTP) da aplicação 
+ContaSaídasVeiculos. Isto garante que, sempre que um veículo sair (for criado um registo em Saídas), 
+a sua aplicação recebe uma notificação instantânea para incrementar o contador.
+
+
+
+3 Recolha de Histórico:
+
+Operação: GET http://<api>/api/somiod/ESTGParking/Saídas (com header somiod-discovery: content-instance)
+
+Se a aplicação for iniciada já com o parque em funcionamento, precisará de descobrir e contar os 
+recursos content-instance que já existem no contentor "Saídas" para iniciar a contagem com o valor correto, 
+somando depois as novas notificações recebidas via subscrição.
+
